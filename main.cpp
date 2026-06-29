@@ -19,6 +19,9 @@ int main()
     sf::Vector2i food = { 10, 10 };
     bool alive = true;
 
+    int score = 0;
+    int bigFood = 0; // counter for bonus food
+
     while (window.isOpen())
     {
         while (auto event = window.pollEvent())
@@ -31,7 +34,6 @@ int main()
 
         if (alive)
         {
-            // Handle input (one turn per frame)
             bool dirChanged = false;
 
             if (!dirChanged && sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up) && dir.y == 0)
@@ -58,17 +60,14 @@ int main()
                 dirChanged = true;
             }
 
-            // Move snake
             sf::Vector2i newHead = snake.front() + dir;
 
-            // Check wall collision
             if (newHead.x < 0 || newHead.x >= W / CELL ||
                 newHead.y < 0 || newHead.y >= H / CELL)
             {
                 alive = false;
             }
 
-            // Check self collision
             for (int i = 0; i < (int)snake.size(); i++)
             {
                 if (snake[i] == newHead)
@@ -81,10 +80,23 @@ int main()
             {
                 snake.push_front(newHead);
 
-                // Eat food
                 if (newHead == food)
                 {
+                    bigFood++;
+
+                    // spawn new food
                     food = { rand() % (W / CELL), rand() % (H / CELL) };
+
+                    // bonus food logic
+                    if (bigFood >= 6)
+                    {
+                        score += 5;
+                        bigFood = 0;
+                    }
+                    else
+                    {
+                        score += 1;
+                    }
                 }
                 else
                 {
@@ -97,6 +109,7 @@ int main()
 
         sf::RectangleShape cell(sf::Vector2f(CELL, CELL));
 
+        // draw snake
         for (int i = 0; i < (int)snake.size(); i++)
         {
             cell.setFillColor(sf::Color::Green);
@@ -104,14 +117,18 @@ int main()
             window.draw(cell);
         }
 
-        cell.setFillColor(sf::Color::Red);
+        // draw food (color changes)
+        if (bigFood >= 5)
+        {
+            cell.setFillColor(sf::Color::Yellow); // bonus food
+        }
+        else
+        {
+            cell.setFillColor(sf::Color::Red); // normal food
+        }
+
         cell.setPosition(sf::Vector2f(food.x * CELL, food.y * CELL));
         window.draw(cell);
-
-        if (!alive)
-        {
-            window.clear(sf::Color(100, 0, 0));
-        }
 
         window.display();
     }
