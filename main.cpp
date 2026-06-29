@@ -13,7 +13,7 @@ int main()
 
     sf::RenderWindow window(sf::VideoMode({ W, H }), "Snake Game");
 
-    int speed = 10; // starting speed
+    int speed = 10;
     window.setFramerateLimit(speed);
 
     std::deque<sf::Vector2i> snake = { {5,5}, {4,5}, {3,5} };
@@ -22,7 +22,7 @@ int main()
     bool alive = true;
 
     int score = 0;
-    int bigFood = 0;
+    int bigFood = 0; // IMPORTANT: restore logic
 
     while (window.isOpen())
     {
@@ -64,7 +64,6 @@ int main()
 
             sf::Vector2i newHead = snake.front() + dir;
 
-            // wall collision (still lethal here as in your base logic style)
             if (newHead.x < 0 || newHead.x >= W / CELL ||
                 newHead.y < 0 || newHead.y >= H / CELL)
             {
@@ -83,16 +82,27 @@ int main()
             {
                 snake.push_front(newHead);
 
+                // FOOD EATING LOGIC (FIXED)
                 if (newHead == food)
                 {
+                    bigFood++;
+
                     food = { rand() % (W / CELL), rand() % (H / CELL) };
 
-                    score++;
+                    if (bigFood >= 6)
+                    {
+                        score += 5;
+                        bigFood = 0;
+                    }
+                    else
+                    {
+                        score += 1;
+                    }
 
-                    // speed scaling
+                    // speed scaling (from Step 5)
                     if (speed < 30)
                     {
-                        speed += 1; // gradual increase
+                        speed++;
                         window.setFramerateLimit(speed);
                     }
                 }
@@ -103,10 +113,11 @@ int main()
             }
         }
 
-        window.clear(sf::Color(30, 30, 30));
+        window.clear(sf::Color(25, 25, 25));
 
-        sf::RectangleShape cell(sf::Vector2f(CELL, CELL));
+        sf::RectangleShape cell(sf::Vector2f(CELL - 2, CELL - 2));
 
+        // draw snake
         for (int i = 0; i < (int)snake.size(); i++)
         {
             cell.setFillColor(sf::Color::Green);
@@ -114,7 +125,16 @@ int main()
             window.draw(cell);
         }
 
-        cell.setFillColor(sf::Color::Red);
+        // food color logic (NOW WORKS)
+        if (bigFood >= 5)
+        {
+            cell.setFillColor(sf::Color::Yellow);
+        }
+        else
+        {
+            cell.setFillColor(sf::Color::Red);
+        }
+
         cell.setPosition(sf::Vector2f(food.x * CELL, food.y * CELL));
         window.draw(cell);
 
